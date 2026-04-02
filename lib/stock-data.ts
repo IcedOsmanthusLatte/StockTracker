@@ -38,9 +38,9 @@ export async function getStockData(symbol: string): Promise<StockData | null> {
 }
 
 export async function getMultipleStocks(symbols: string[]): Promise<StockData[]> {
-  const promises = symbols.map(symbol => getStockData(symbol));
+  const promises = symbols.map((symbol: string) => getStockData(symbol));
   const results = await Promise.all(promises);
-  return results.filter((data): data is StockData => data !== null);
+  return results.filter((data: StockData | null): data is StockData => data !== null);
 }
 
 export function getAvailableStocks(): string[] {
