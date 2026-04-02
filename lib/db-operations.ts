@@ -2,6 +2,11 @@ import { supabase, Stock, StockAnalysis } from './supabase';
 
 // 获取所有股票
 export async function getAllStocks(): Promise<Stock[]> {
+  if (!supabase) {
+    console.warn('Supabase client not initialized');
+    return [];
+  }
+  
   const { data, error } = await supabase
     .from('stocks')
     .select('*')
@@ -17,6 +22,11 @@ export async function getAllStocks(): Promise<Stock[]> {
 
 // 根据 symbol 获取股票
 export async function getStockBySymbol(symbol: string): Promise<Stock | null> {
+  if (!supabase) {
+    console.warn('Supabase client not initialized');
+    return null;
+  }
+  
   const { data, error } = await supabase
     .from('stocks')
     .select('*')
@@ -38,6 +48,11 @@ export async function saveStockAnalysis(
   analysis: string,
   analyzedAt: string
 ): Promise<StockAnalysis | null> {
+  if (!supabase) {
+    console.warn('Supabase client not initialized');
+    return null;
+  }
+  
   const { data, error } = await supabase
     .from('stock_analyses')
     .insert({
@@ -59,6 +74,11 @@ export async function saveStockAnalysis(
 
 // 获取最新的股票分析（24小时内）
 export async function getLatestAnalysis(symbol: string): Promise<StockAnalysis | null> {
+  if (!supabase) {
+    console.warn('Supabase client not initialized');
+    return null;
+  }
+  
   const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
   
   const { data, error } = await supabase
