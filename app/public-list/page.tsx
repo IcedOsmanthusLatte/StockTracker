@@ -32,12 +32,18 @@ export default function PublicListPage() {
   const analyzeStock = async (symbol: string) => {
     if (analyzing.has(symbol)) return;
 
-    setAnalyzing(prev => new Set(prev).add(symbol));
+    // 清除该股票的旧分析结果和错误信息，确保显示最新数据
+    setAnalyses(prev => {
+      const next = new Map(prev);
+      next.delete(symbol);
+      return next;
+    });
     setAnalysisErrors(prev => {
       const next = new Map(prev);
       next.delete(symbol);
       return next;
     });
+    setAnalyzing(prev => new Set(prev).add(symbol));
 
     try {
       const response = await fetch('/api/analyze', {

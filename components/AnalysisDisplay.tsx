@@ -30,17 +30,17 @@ export default function AnalysisDisplay({ analysis, analyzedAt }: AnalysisDispla
   const newsSection = extractSection(3);
   const suggestionSection = extractSection(4);
   
-  // 提取操作建议关键词
-  const suggestionMatch = suggestionSection.match(/(强烈建议|轻微建议|不增不减|我不知道)(补仓|卖出)?/);
+  // 提取操作倾向关键词
+  const suggestionMatch = suggestionSection.match(/(倾向于|略微倾向于|没有明显倾向|我不知道)(补仓|卖出)?/);
   const suggestion = suggestionMatch ? suggestionMatch[0] : '';
   
-  // 判断建议类型
+  // 判断倾向类型
   const getSuggestionStyle = () => {
-    if (suggestion.includes('强烈建议补仓')) return { bg: 'from-green-50 to-emerald-50', border: 'border-green-200', text: 'text-green-700', icon: TrendingUp };
-    if (suggestion.includes('轻微建议补仓')) return { bg: 'from-green-50 to-emerald-50', border: 'border-green-200', text: 'text-green-600', icon: TrendingUp };
-    if (suggestion.includes('强烈建议卖出')) return { bg: 'from-red-50 to-rose-50', border: 'border-red-200', text: 'text-red-700', icon: TrendingDown };
-    if (suggestion.includes('轻微建议卖出')) return { bg: 'from-red-50 to-rose-50', border: 'border-red-200', text: 'text-red-600', icon: TrendingDown };
-    if (suggestion.includes('不增不减')) return { bg: 'from-blue-50 to-cyan-50', border: 'border-blue-200', text: 'text-blue-700', icon: CheckCircle };
+    if (suggestion.includes('倾向于补仓')) return { bg: 'from-green-50 to-emerald-50', border: 'border-green-200', text: 'text-green-700', icon: TrendingUp };
+    if (suggestion.includes('略微倾向于补仓')) return { bg: 'from-green-50 to-emerald-50', border: 'border-green-200', text: 'text-green-600', icon: TrendingUp };
+    if (suggestion.includes('倾向于卖出')) return { bg: 'from-red-50 to-rose-50', border: 'border-red-200', text: 'text-red-700', icon: TrendingDown };
+    if (suggestion.includes('略微倾向于卖出')) return { bg: 'from-red-50 to-rose-50', border: 'border-red-200', text: 'text-red-600', icon: TrendingDown };
+    if (suggestion.includes('没有明显倾向')) return { bg: 'from-blue-50 to-cyan-50', border: 'border-blue-200', text: 'text-blue-700', icon: CheckCircle };
     return { bg: 'from-gray-50 to-slate-50', border: 'border-gray-200', text: 'text-gray-700', icon: AlertCircle };
   };
   
@@ -102,7 +102,7 @@ export default function AnalysisDisplay({ analysis, analyzedAt }: AnalysisDispla
       {suggestion && (
         <div className={`bg-gradient-to-br ${suggestionStyle.bg} rounded-2xl p-6 border ${suggestionStyle.border}`}>
           <div>
-            <h4 className={`text-lg font-bold mb-3 ${suggestionStyle.text}`}>操作建议</h4>
+            <h4 className={`text-lg font-bold mb-3 ${suggestionStyle.text}`}>📊 操作倾向</h4>
             <div className="text-gray-700 leading-relaxed whitespace-pre-wrap">
               {suggestionSection}
             </div>
@@ -113,7 +113,7 @@ export default function AnalysisDisplay({ analysis, analyzedAt }: AnalysisDispla
       {/* 数据说明 */}
       <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-200">
         <p className="text-sm text-yellow-800 leading-relaxed">
-          ⚠️ 本分析数据基于公开市场及财经信息来源，存在时效性与交易时段差异风险。操作建议严格依据公开事实与逻辑推导，不构成任何投资推荐或买卖指令。投资有风险，请结合自身情况与专业顾问意见审慎决策。
+          ⚠️ 本分析数据基于公开市场及财经信息来源，存在时效性与交易时段差异风险。操作倾向严格依据公开事实与逻辑推导，不构成任何投资推荐或买卖指令。投资有风险，请结合自身情况与专业顾问意见审慎决策。
         </p>
       </div>
     </div>

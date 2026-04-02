@@ -86,6 +86,12 @@ export default function MyStocksPage() {
   const analyzeStock = async (symbol: string) => {
     if (analyzing.has(symbol)) return;
 
+    // 清除该股票的旧分析结果，确保显示最新数据
+    setAnalyses(prev => {
+      const next = new Map(prev);
+      next.delete(symbol);
+      return next;
+    });
     setAnalyzing(prev => new Set(prev).add(symbol));
     try {
       const response = await fetch('/api/analyze', {
