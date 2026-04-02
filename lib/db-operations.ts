@@ -113,7 +113,7 @@ export async function getUserStocks(userId: string): Promise<Stock[]> {
     return [];
   }
   
-  return data?.map(item => (item as any).stocks) || [];
+  return data?.map((item: any) => item.stocks) || [];
 }
 
 // 添加用户订阅股票
