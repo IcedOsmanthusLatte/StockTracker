@@ -95,7 +95,7 @@ ${prompt}`;
     console.log('[xAI] 分析结果长度:', analysis.length);
     console.log('[xAI] 使用的工具数:', response.data.usage?.num_server_side_tools_used || 0);
     
-    const disclaimer = '\n\n---\n\n【数据说明】\n本分析数据基于公开市场及财经信息来源，存在时效性与交易时段差异风险。操作倾向严格依据公开事实与逻辑推导，不构成任何投资推荐或买卖指令。投资有风险，请结合自身情况与专业顾问意见审慎决策。';
+    const disclaimer = '\n\n---\n\n【数据说明】\n本分析数据基于公开市场及财经信息来源，存在时效性与交易时段差异风险。持仓倾向严格依据公开事实与逻辑推导，不构成任何投资推荐或买卖指令。投资有风险，请结合自身情况与专业顾问意见审慎决策。';
     
     return analysis + disclaimer;
   } catch (error: any) {
