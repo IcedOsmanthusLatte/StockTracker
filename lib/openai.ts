@@ -31,8 +31,8 @@ ${prompt}`;
       timeout: 120000, // 增加到120秒
     };
 
-    // 如果配置了代理，使用代理
-    if (process.env.HTTP_PROXY || process.env.HTTPS_PROXY) {
+    // 只在本地开发环境使用代理
+    if (process.env.NODE_ENV === 'development' && (process.env.HTTP_PROXY || process.env.HTTPS_PROXY)) {
       const proxyUrl = process.env.HTTPS_PROXY || process.env.HTTP_PROXY;
       console.log('[xAI] 使用代理:', proxyUrl);
       const agent = new HttpsProxyAgent(proxyUrl!);
