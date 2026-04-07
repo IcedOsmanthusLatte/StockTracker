@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Star, Globe } from 'lucide-react';
+import { Star, Globe, ChevronDown, ChevronUp } from 'lucide-react';
 import AnalysisDisplay from '@/components/AnalysisDisplay';
 
 interface Stock {
@@ -23,6 +23,7 @@ export default function FeaturedTab() {
   const [error, setError] = useState<string | null>(null);
   const [analyses, setAnalyses] = useState<Map<string, StockAnalysis>>(new Map());
   const [loadingAnalyses, setLoadingAnalyses] = useState(false);
+  const [expandedStock, setExpandedStock] = useState<string | null>(null);
 
   useEffect(() => {
     fetchFeaturedStocks();
@@ -72,6 +73,10 @@ export default function FeaturedTab() {
 
     setAnalyses(analysisMap);
     setLoadingAnalyses(false);
+  };
+
+  const toggleExpand = (symbol: string) => {
+    setExpandedStock(prev => prev === symbol ? null : symbol);
   };
 
   const getMarketBadge = (symbol: string) => {
@@ -159,8 +164,28 @@ export default function FeaturedTab() {
                   </span>
                 </div>
 
-                {/* AI Analysis Display */}
+                {/* Expand/Collapse Button */}
                 {analyses.has(stock.symbol) && (
+                  <button
+                    onClick={() => toggleExpand(stock.symbol)}
+                    className="mt-3 flex items-center gap-2 text-yellow-600 hover:text-yellow-700 font-medium transition-colors"
+                  >
+                    {expandedStock === stock.symbol ? (
+                      <>
+                        <ChevronUp className="w-5 h-5" />
+                        收起AI分析
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="w-5 h-5" />
+                        查看AI分析
+                      </>
+                    )}
+                  </button>
+                )}
+
+                {/* AI Analysis Display - Only show when expanded */}
+                {analyses.has(stock.symbol) && expandedStock === stock.symbol && (
                   <div className="mt-6 pt-6 border-t border-gray-200">
                     <AnalysisDisplay
                       analysis={analyses.get(stock.symbol)!.analysis}

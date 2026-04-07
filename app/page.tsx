@@ -29,10 +29,13 @@ export default function Home() {
               <div className="w-10 h-10 bg-gradient-to-br from-violet-600 to-purple-600 rounded-lg flex items-center justify-center">
                 <TrendingUp className="w-6 h-6 text-white" />
               </div>
-              <span className="text-xl font-bold text-gray-900">StockTracker</span>
+              <div className="flex flex-col">
+                <span className="text-xl font-bold text-gray-900">StockTracker</span>
+                <span className="text-xs text-gray-500">stockr.site</span>
+              </div>
             </div>
-            <div className="text-sm text-gray-600">
-              AI驱动的智能股票分析平台
+            <div className="hidden md:block text-base italic text-gray-600 font-serif">
+              芒格："我的剑只传给能挥舞它的人"
             </div>
           </div>
         </div>

@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import bcrypt from 'bcryptjs';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export async function POST(request: Request) {
   try {
@@ -11,6 +12,15 @@ export async function POST(request: Request) {
     if (!email || !password) {
       return NextResponse.json(
         { error: '邮箱和密码不能为空' },
+        { status: 400 }
+      );
+    }
+
+    // 验证邮箱格式
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return NextResponse.json(
+        { error: '请输入有效的邮箱地址' },
         { status: 400 }
       );
     }
@@ -24,33 +34,48 @@ export async function POST(request: Request) {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // 注册用户（邮件验证已在Supabase控制台关闭）
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: undefined, // 不需要邮件确认
-      }
-    });
+    // 检查邮箱是否已存在
+    const { data: existingUser } = await supabase
+      .from('users')
+      .select('id')
+      .eq('username', email)
+      .single();
 
-    if (error) {
+    if (existingUser) {
       return NextResponse.json(
-        { error: error.message },
+        { error: '该邮箱已被注册' },
         { status: 400 }
       );
     }
 
-    // 创建用户profile
-    if (data.user) {
-      await supabase.from('profiles').insert({
-        id: data.user.id,
-        email: data.user.email
-      });
+    // 加密密码
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    // 创建用户（username字段存储邮箱）
+    const { data: newUser, error } = await supabase
+      .from('users')
+      .insert({
+        username: email,
+        password_hash: passwordHash,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Database error:', error);
+      return NextResponse.json(
+        { error: '注册失败，请稍后重试' },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({
       message: '注册成功',
-      user: data.user
+      user: {
+        id: newUser.id,
+        email: newUser.username,
+        created_at: newUser.created_at,
+      }
     });
   } catch (error) {
     console.error('Register error:', error);

@@ -6,7 +6,7 @@ import { getTodayCache, saveTodayCache, analyzeWithRetry } from '@/lib/cache-uti
 
 export async function POST(request: Request) {
   try {
-    const { symbol } = await request.json();
+    const { symbol, forceRefresh } = await request.json();
 
     if (!symbol) {
       return NextResponse.json(
@@ -15,15 +15,19 @@ export async function POST(request: Request) {
       );
     }
 
-    // 1. 检查是否有当天的缓存
-    const cachedAnalysis = await getTodayCache(symbol);
-    if (cachedAnalysis) {
-      console.log(`[Analyze API] 使用 ${symbol} 的当天缓存`);
-      return NextResponse.json({
-        analysis: cachedAnalysis.analysis,
-        analyzedAt: cachedAnalysis.analyzed_at,
-        cached: true
-      });
+    // 1. 检查是否有当天的缓存（除非强制刷新）
+    if (!forceRefresh) {
+      const cachedAnalysis = await getTodayCache(symbol);
+      if (cachedAnalysis) {
+        console.log(`[Analyze API] 使用 ${symbol} 的当天缓存`);
+        return NextResponse.json({
+          analysis: cachedAnalysis.analysis,
+          analyzedAt: cachedAnalysis.analyzed_at,
+          cached: true
+        });
+      }
+    } else {
+      console.log(`[Analyze API] ${symbol} 强制刷新，跳过缓存`);
     }
 
     console.log(`[Analyze API] ${symbol} 没有当天缓存，开始AI分析`);
