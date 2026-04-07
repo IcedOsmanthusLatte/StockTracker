@@ -149,40 +149,36 @@ export default function FeaturedTab() {
               className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all"
             >
               <div className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-baseline gap-3 mb-2">
-                      <h2 className="text-xl font-bold text-gray-900">{stock.name}</h2>
-                      <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium">
-                        {stock.symbol}
-                      </span>
-                      <span className={`px-3 py-1 rounded-lg text-sm font-medium ${marketBadge.color}`}>
-                        {marketBadge.label}
-                      </span>
+                <div className="flex items-baseline gap-3 mb-4">
+                  <h2 className="text-xl font-bold text-gray-900">{stock.name}</h2>
+                  <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium">
+                    {stock.symbol}
+                  </span>
+                  <span className={`px-3 py-1 rounded-lg text-sm font-medium ${marketBadge.color}`}>
+                    {marketBadge.label}
+                  </span>
+                </div>
+
+                {/* AI Analysis Display */}
+                {analyses.has(stock.symbol) && (
+                  <div className="mt-6 pt-6 border-t border-gray-200">
+                    <AnalysisDisplay
+                      analysis={analyses.get(stock.symbol)!.analysis}
+                      analyzedAt={analyses.get(stock.symbol)!.analyzedAt}
+                    />
+                  </div>
+                )}
+
+                {/* Loading Analysis Indicator */}
+                {loadingAnalyses && !analyses.has(stock.symbol) && (
+                  <div className="mt-6 pt-6 border-t border-gray-200">
+                    <div className="flex items-center gap-2 text-gray-500">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-600"></div>
+                      <span className="text-sm">加载AI分析中...</span>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
-
-              {/* AI Analysis Display */}
-              {analyses.has(stock.symbol) && (
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <AnalysisDisplay
-                    analysis={analyses.get(stock.symbol)!.analysis}
-                    analyzedAt={analyses.get(stock.symbol)!.analyzedAt}
-                  />
-                </div>
-              )}
-
-              {/* Loading Analysis Indicator */}
-              {loadingAnalyses && !analyses.has(stock.symbol) && (
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <div className="flex items-center gap-2 text-gray-500">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-600"></div>
-                    <span className="text-sm">加载AI分析中...</span>
-                  </div>
-                </div>
-              )}
             </div>
           );
         })}
