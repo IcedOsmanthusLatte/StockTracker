@@ -27,6 +27,7 @@ export default function FeaturedTab() {
 
   useEffect(() => {
     fetchFeaturedStocks();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchFeaturedStocks = async () => {

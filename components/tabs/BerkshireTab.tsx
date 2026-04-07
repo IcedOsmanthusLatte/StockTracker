@@ -28,6 +28,7 @@ export default function BerkshireTab() {
 
   useEffect(() => {
     fetchBerkshireHoldings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchBerkshireHoldings = async () => {

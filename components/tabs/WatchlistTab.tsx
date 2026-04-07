@@ -65,6 +65,7 @@ export default function WatchlistTab() {
     if (user) {
       fetchWatchlist();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   // 加载关注列表
