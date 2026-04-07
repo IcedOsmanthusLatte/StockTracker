@@ -1,12 +1,23 @@
 import { supabase, StockAnalysis } from './supabase';
 
 /**
- * 获取中国时间的今天日期字符串 (YYYY-MM-DD)
+ * 获取中国时间的缓存日期字符串 (YYYY-MM-DD)
+ * 规则：以每天早上10点（中国时间）为分割点
+ * - 10点之前：使用前一天的日期（继续使用昨天的缓存）
+ * - 10点之后：使用当天的日期（更新为今天的缓存）
  */
 export function getChinaDateString(): string {
   const now = new Date();
   // 转换为中国时区 (UTC+8)
   const chinaTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+  
+  const hour = chinaTime.getUTCHours();
+  
+  // 如果是10点之前，使用前一天的日期
+  if (hour < 10) {
+    chinaTime.setUTCDate(chinaTime.getUTCDate() - 1);
+  }
+  
   const year = chinaTime.getUTCFullYear();
   const month = String(chinaTime.getUTCMonth() + 1).padStart(2, '0');
   const day = String(chinaTime.getUTCDate()).padStart(2, '0');
