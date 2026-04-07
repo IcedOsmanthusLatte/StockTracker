@@ -1,7 +1,7 @@
 # StockTracker 项目开发进度
 
 ## 📅 最后更新时间
-2026年4月3日 18:46 (UTC+08:00)
+2026年4月7日 14:08 (UTC+08:00)
 
 ## ✅ 已完成功能
 
@@ -60,7 +60,21 @@
 - ✅ 统一的Header和Tab导航栏设计
 - ✅ 流畅的Tab切换体验（无需路由跳转）
 
-### 6. 缓存机制（部分实现）
+### 6. 特别关注页面
+- ✅ 创建了 `/api/featured` API路由
+- ✅ 实现了完整的FeaturedTab组件
+- ✅ 创建了特别关注股票数据脚本 (`scripts/update-featured-stocks.sql`)
+- ✅ 功能特性：
+  - 14只精选股票（5只A股 + 4只港股 + 5只美股）
+  - 自动识别市场类型并显示彩色标签
+  - AI分析功能
+  - 美观的渐变UI设计（黄色/橙色主题）
+- ✅ 股票列表包括：
+  - A股：贵州茅台、海康威视、纳指ETF广发、兴业银锡、中远海控
+  - 港股：龙资源、西部水泥、中国海洋石油、中远海控
+  - 美股：VTV、拼多多、VOO、VYM、EWJ
+
+### 7. 缓存机制（部分实现）
 - ✅ 分析结果会保存到数据库
 - ✅ 包含 `analysis_date` 字段用于按日期区分
 - ⚠️ 智能缓存读取逻辑尚未实现（每次点击都会重新分析）
@@ -76,15 +90,15 @@
 ### 优先级2：完整的页面结构
 - ✅ 创建主页面，包含4个Tab：
   - ✅ 伯克希尔前十大持仓（已完成）
-  - ⏳ 特别关注（占位页面已创建）
+  - ✅ 特别关注（已完成）
   - ⏳ 我的关注（占位页面已创建）
   - ✅ 联系我们（已完成）
 - ✅ 实现Tab导航和切换
 
 ### 优先级3：特别关注页面
-- [ ] 创建 `/featured` 页面
-- [ ] 创建 `/api/featured` API路由
-- [ ] 管理员可配置的股票列表
+- ✅ 创建 FeaturedTab 组件
+- ✅ 创建 `/api/featured` API路由
+- ✅ 管理员可配置的股票列表（通过SQL脚本）
 - [ ] 每日自动更新AI分析（定时任务）
 
 ### 优先级4：我的关注页面
@@ -112,10 +126,13 @@
 ### 数据库相关
 - `supabase-schema-v2.sql` - 新的数据库架构（已在Supabase执行）
 - `scripts/update-berkshire-holdings.sql` - 伯克希尔持仓数据（已执行）
+- `scripts/update-featured-stocks.sql` - 特别关注股票数据（需执行）
+- `FEATURED_STOCKS_SETUP.md` - 特别关注设置指南
 
 ### API路由
 - `app/api/analyze/route.ts` - AI分析API（缓存读取已禁用，但会保存）
 - `app/api/berkshire/route.ts` - 获取伯克希尔持仓
+- `app/api/featured/route.ts` - 获取特别关注股票
 - `app/api/auth/register/route.ts` - 用户注册
 - `app/api/auth/login/route.ts` - 用户登录
 - `app/api/auth/logout/route.ts` - 用户登出
@@ -125,10 +142,10 @@
 ### 页面组件
 - `app/page.tsx` - 主应用页面（Tab导航结构）
 - `app/berkshire/page.tsx` - 伯克希尔独立页面（保留）
-- `components/tabs/BerkshireTab.tsx` - 伯克希尔Tab组件
-- `components/tabs/FeaturedTab.tsx` - 特别关注Tab组件
-- `components/tabs/WatchlistTab.tsx` - 我的关注Tab组件
-- `components/tabs/ContactTab.tsx` - 联系我们Tab组件
+- `components/tabs/BerkshireTab.tsx` - 伯克希尔Tab组件（完整功能）
+- `components/tabs/FeaturedTab.tsx` - 特别关注Tab组件（完整功能）
+- `components/tabs/WatchlistTab.tsx` - 我的关注Tab组件（占位）
+- `components/tabs/ContactTab.tsx` - 联系我们Tab组件（完整功能）
 - `components/AnalysisDisplay.tsx` - AI分析结果显示组件
 
 ### AI相关
@@ -253,6 +270,15 @@ git config http.proxy http://127.0.0.1:7890
 - 主页（旧版）：http://localhost:3000/public-list
 
 ## 🔄 最近的修改
+
+### 2026-04-07 14:08
+- ✅ 实现特别关注页面完整功能
+- ✅ 创建 `/api/featured` API路由
+- ✅ 更新FeaturedTab组件（从占位页面到完整功能）
+- ✅ 创建特别关注股票数据SQL脚本（14只股票）
+- ✅ 添加市场类型自动识别（A股/港股/美股）
+- ✅ 更新Stock和StockAnalysis接口类型定义
+- ✅ 创建FEATURED_STOCKS_SETUP.md设置指南
 
 ### 2026-04-03 18:46
 - ✅ 创建主页面Tab导航结构（单页面 + Tab切换设计）

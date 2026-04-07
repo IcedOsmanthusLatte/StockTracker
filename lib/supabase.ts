@@ -13,8 +13,11 @@ export interface Stock {
   id: number;
   symbol: string;
   name: string;
+  list_type?: 'berkshire' | 'featured' | 'user';
+  display_order?: number;
+  portfolio_weight?: number;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
 }
 
 export interface StockAnalysis {
@@ -23,6 +26,7 @@ export interface StockAnalysis {
   symbol: string;
   analysis: string;
   analyzed_at: string;
+  analysis_date?: string;
   created_at: string;
 }
 
