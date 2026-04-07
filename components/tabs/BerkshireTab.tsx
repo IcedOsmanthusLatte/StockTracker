@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { TrendingUp, BarChart3, Sparkles, RefreshCw } from 'lucide-react';
-import AnalysisDisplay from '@/components/AnalysisDisplay';
+import { TrendingUp, BarChart3 } from 'lucide-react';
 
 interface Stock {
   id: number;
@@ -12,18 +11,10 @@ interface Stock {
   display_order: number;
 }
 
-interface StockAnalysis {
-  analysis: string;
-  analyzedAt: string;
-  cached?: boolean;
-}
-
 export default function BerkshireTab() {
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [analyzing, setAnalyzing] = useState<Set<string>>(new Set());
-  const [analyses, setAnalyses] = useState<Map<string, StockAnalysis>>(new Map());
 
   useEffect(() => {
     fetchBerkshireHoldings();
@@ -41,37 +32,6 @@ export default function BerkshireTab() {
       setError(err instanceof Error ? err.message : '加载失败');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const analyzeStock = async (symbol: string) => {
-    if (analyzing.has(symbol)) return;
-
-    setAnalyses(prev => {
-      const next = new Map(prev);
-      next.delete(symbol);
-      return next;
-    });
-    setAnalyzing(prev => new Set(prev).add(symbol));
-
-    try {
-      const response = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ symbol }),
-      });
-
-      if (!response.ok) throw new Error('分析失败');
-      const analysis: StockAnalysis = await response.json();
-      setAnalyses(prev => new Map(prev).set(symbol, analysis));
-    } catch (err) {
-      console.error('Analysis error:', err);
-    } finally {
-      setAnalyzing(prev => {
-        const next = new Set(prev);
-        next.delete(symbol);
-        return next;
-      });
     }
   };
 
@@ -123,7 +83,7 @@ export default function BerkshireTab() {
               <h3 className="font-semibold text-gray-900 mb-2">关于持仓数据</h3>
               <p className="text-sm text-gray-600 leading-relaxed">
                 以下数据基于伯克希尔·哈撒韦2025年第四季度13F报告（截至2025年12月31日）。
-                投资组合总价值约$274.16B，前十大持仓占比约88%。数据每日自动更新AI分析。
+                投资组合总价值约$274.16B，前十大持仓占比约88%。AI分析每日早上10点自动更新。
               </p>
             </div>
           </div>
@@ -174,38 +134,9 @@ export default function BerkshireTab() {
                         ></div>
                       </div>
                     </div>
-
-                    {/* AI Analysis Button */}
-                    <button
-                      onClick={() => analyzeStock(stock.symbol)}
-                      disabled={analyzing.has(stock.symbol)}
-                      className="px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-xl hover:from-violet-700 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg shadow-violet-200 hover:shadow-xl hover:shadow-violet-300 font-medium"
-                    >
-                      {analyzing.has(stock.symbol) ? (
-                        <>
-                          <RefreshCw className="w-4 h-4 animate-spin" />
-                          分析中...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="w-4 h-4" />
-                          AI分析
-                        </>
-                      )}
-                    </button>
                   </div>
                 </div>
               </div>
-
-              {/* Analysis Display */}
-              {analyses.has(stock.symbol) && (
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <AnalysisDisplay
-                    analysis={analyses.get(stock.symbol)!.analysis}
-                    analyzedAt={analyses.get(stock.symbol)!.analyzedAt}
-                  />
-                </div>
-              )}
             </div>
           </div>
         ))}

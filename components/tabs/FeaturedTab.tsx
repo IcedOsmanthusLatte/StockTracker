@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Star, Globe, Sparkles, RefreshCw } from 'lucide-react';
-import AnalysisDisplay from '@/components/AnalysisDisplay';
+import { Star, Globe } from 'lucide-react';
 
 interface Stock {
   id: number;
@@ -11,18 +10,10 @@ interface Stock {
   display_order?: number;
 }
 
-interface StockAnalysis {
-  analysis: string;
-  analyzedAt: string;
-  cached?: boolean;
-}
-
 export default function FeaturedTab() {
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [analyzing, setAnalyzing] = useState<Set<string>>(new Set());
-  const [analyses, setAnalyses] = useState<Map<string, StockAnalysis>>(new Map());
 
   useEffect(() => {
     fetchFeaturedStocks();
@@ -40,37 +31,6 @@ export default function FeaturedTab() {
       setError(err instanceof Error ? err.message : '加载失败');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const analyzeStock = async (symbol: string) => {
-    if (analyzing.has(symbol)) return;
-
-    setAnalyses(prev => {
-      const next = new Map(prev);
-      next.delete(symbol);
-      return next;
-    });
-    setAnalyzing(prev => new Set(prev).add(symbol));
-
-    try {
-      const response = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ symbol }),
-      });
-
-      if (!response.ok) throw new Error('分析失败');
-      const analysis: StockAnalysis = await response.json();
-      setAnalyses(prev => new Map(prev).set(symbol, analysis));
-    } catch (err) {
-      console.error('Analysis error:', err);
-    } finally {
-      setAnalyzing(prev => {
-        const next = new Set(prev);
-        next.delete(symbol);
-        return next;
-      });
     }
   };
 
@@ -132,7 +92,7 @@ export default function FeaturedTab() {
               <h3 className="font-semibold text-gray-900 mb-2">关于特别关注</h3>
               <p className="text-sm text-gray-600 leading-relaxed">
                 精选14只优质股票，覆盖A股、港股、美股三大市场。包含价值投资标的、行业龙头、优质ETF等。
-                点击AI分析按钮获取实时智能分析。
+                AI分析每日早上10点自动更新。
               </p>
             </div>
           </div>
@@ -160,37 +120,8 @@ export default function FeaturedTab() {
                         {marketBadge.label}
                       </span>
                     </div>
-
-                    {/* AI Analysis Button */}
-                    <button
-                      onClick={() => analyzeStock(stock.symbol)}
-                      disabled={analyzing.has(stock.symbol)}
-                      className="mt-3 px-6 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white rounded-xl hover:from-yellow-600 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-lg shadow-yellow-200 hover:shadow-xl hover:shadow-yellow-300 font-medium"
-                    >
-                      {analyzing.has(stock.symbol) ? (
-                        <>
-                          <RefreshCw className="w-4 h-4 animate-spin" />
-                          分析中...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="w-4 h-4" />
-                          AI分析
-                        </>
-                      )}
-                    </button>
                   </div>
                 </div>
-
-                {/* Analysis Display */}
-                {analyses.has(stock.symbol) && (
-                  <div className="mt-6 pt-6 border-t border-gray-200">
-                    <AnalysisDisplay
-                      analysis={analyses.get(stock.symbol)!.analysis}
-                      analyzedAt={analyses.get(stock.symbol)!.analyzedAt}
-                    />
-                  </div>
-                )}
               </div>
             </div>
           );
