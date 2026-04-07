@@ -35,7 +35,7 @@ export default function Home() {
               </div>
             </div>
             <div className="hidden md:block text-base italic text-gray-600 font-serif">
-              芒格："我的剑只传给能挥舞它的人"
+              芒格：&ldquo;我的剑只传给能挥舞它的人&rdquo;
             </div>
           </div>
         </div>
