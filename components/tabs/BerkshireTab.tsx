@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { TrendingUp, BarChart3 } from 'lucide-react';
+import AnalysisDisplay from '@/components/AnalysisDisplay';
 
 interface Stock {
   id: number;
@@ -11,10 +12,18 @@ interface Stock {
   display_order: number;
 }
 
+interface StockAnalysis {
+  analysis: string;
+  analyzedAt: string;
+  cached?: boolean;
+}
+
 export default function BerkshireTab() {
   const [stocks, setStocks] = useState<Stock[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [analyses, setAnalyses] = useState<Map<string, StockAnalysis>>(new Map());
+  const [loadingAnalyses, setLoadingAnalyses] = useState(false);
 
   useEffect(() => {
     fetchBerkshireHoldings();
@@ -27,12 +36,43 @@ export default function BerkshireTab() {
       if (!response.ok) throw new Error('获取数据失败');
       
       const data = await response.json();
-      setStocks(data.stocks || []);
+      const stocksList = data.stocks || [];
+      setStocks(stocksList);
+      
+      // 自动加载所有股票的缓存分析
+      if (stocksList.length > 0) {
+        loadCachedAnalyses(stocksList);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : '加载失败');
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadCachedAnalyses = async (stocksList: Stock[]) => {
+    setLoadingAnalyses(true);
+    const analysisMap = new Map<string, StockAnalysis>();
+
+    for (const stock of stocksList) {
+      try {
+        const response = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ symbol: stock.symbol }),
+        });
+
+        if (response.ok) {
+          const analysis: StockAnalysis = await response.json();
+          analysisMap.set(stock.symbol, analysis);
+        }
+      } catch (err) {
+        console.error(`Failed to load analysis for ${stock.symbol}:`, err);
+      }
+    }
+
+    setAnalyses(analysisMap);
+    setLoadingAnalyses(false);
   };
 
   if (loading) {
@@ -137,6 +177,26 @@ export default function BerkshireTab() {
                   </div>
                 </div>
               </div>
+
+              {/* AI Analysis Display */}
+              {analyses.has(stock.symbol) && (
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <AnalysisDisplay
+                    analysis={analyses.get(stock.symbol)!.analysis}
+                    analyzedAt={analyses.get(stock.symbol)!.analyzedAt}
+                  />
+                </div>
+              )}
+
+              {/* Loading Analysis Indicator */}
+              {loadingAnalyses && !analyses.has(stock.symbol) && (
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                    <span className="text-sm">加载AI分析中...</span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         ))}
