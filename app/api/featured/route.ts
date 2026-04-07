@@ -1,19 +1,36 @@
 import { NextResponse } from 'next/server';
-import { getAllStocks } from '@/lib/db-operations';
+import { supabase } from '@/lib/supabase';
 
 export async function GET() {
   try {
-    const allStocks = await getAllStocks();
+    if (!supabase) {
+      console.error('Supabase client not initialized');
+      return NextResponse.json(
+        { error: 'Database connection failed' },
+        { status: 500 }
+      );
+    }
+
+    // 直接查询 list_type 为 'featured' 的股票
+    const { data, error } = await supabase
+      .from('stocks')
+      .select('*')
+      .eq('list_type', 'featured')
+      .order('display_order', { ascending: true });
     
-    // 筛选出特别关注的股票
-    const featuredStocks = allStocks.filter(stock => stock.list_type === 'featured');
+    if (error) {
+      console.error('Error fetching featured stocks:', error);
+      return NextResponse.json(
+        { error: '获取特别关注列表失败' },
+        { status: 500 }
+      );
+    }
     
-    // 按 display_order 排序
-    featuredStocks.sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+    console.log('Featured stocks fetched:', data?.length || 0);
     
     return NextResponse.json({ 
-      stocks: featuredStocks,
-      count: featuredStocks.length 
+      stocks: data || [],
+      count: data?.length || 0
     });
   } catch (error) {
     console.error('Error fetching featured stocks:', error);
