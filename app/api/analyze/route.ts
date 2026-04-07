@@ -50,10 +50,15 @@ export async function POST(request: Request) {
 
     const analyzedAt = new Date().toISOString();
 
-    // 4. 保存到当天缓存（覆盖旧数据）
-    await saveTodayCache(stock.id, symbol, analysis);
-    console.log(`[Analyze API] ${symbol} 分析完成并已缓存`);
+    // 4. 尝试保存到当天缓存（如果失败也不影响返回结果）
+    try {
+      await saveTodayCache(stock.id, symbol, analysis);
+      console.log(`[Analyze API] ${symbol} 分析完成并已缓存`);
+    } catch (cacheError) {
+      console.warn(`[Analyze API] ${symbol} 缓存保存失败，但分析成功:`, cacheError);
+    }
 
+    // 5. 返回分析结果（无论缓存是否保存成功）
     return NextResponse.json({
       analysis,
       analyzedAt,
