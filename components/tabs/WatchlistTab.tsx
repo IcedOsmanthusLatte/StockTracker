@@ -43,7 +43,8 @@ export default function WatchlistTab() {
   const [loading, setLoading] = useState(false);
   const [analyses, setAnalyses] = useState<Map<string, StockAnalysis>>(new Map());
   const [loadingAnalyses, setLoadingAnalyses] = useState(false);
-  const [expandedStock, setExpandedStock] = useState<string | null>(null);
+  const [selectedStock, setSelectedStock] = useState<string | null>(null);
+  const [hoveredStock, setHoveredStock] = useState<string | null>(null);
 
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -266,10 +267,6 @@ export default function WatchlistTab() {
     }
   };
 
-  // 展开/收起AI分析
-  const toggleExpand = (symbol: string) => {
-    setExpandedStock(prev => prev === symbol ? null : symbol);
-  };
 
   // 获取市场标签
   const getMarketBadge = (symbol: string) => {
@@ -438,111 +435,171 @@ export default function WatchlistTab() {
         </div>
       )}
 
-      {/* 添加股票按钮 */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">
-            自选股票 ({watchlist.length}/5)
-          </h2>
-          {watchlist.length < 5 && (
+      {/* Main Layout: Sidebar + Content */}
+      {watchlist.length === 0 && !loading ? (
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12">
+          <div className="text-center text-gray-500">
+            <Heart className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+            <p className="mb-4">还没有添加股票</p>
             <button
               onClick={() => setShowSearch(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
             >
               <Search className="w-4 h-4" />
               添加股票
             </button>
-          )}
+          </div>
         </div>
-
-        {watchlist.length === 0 && !loading && (
-          <div className="text-center py-12 text-gray-500">
-            还没有添加股票，点击上方按钮添加
+      ) : loading ? (
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">加载中...</p>
           </div>
-        )}
-
-        {loading && (
-          <div className="text-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600 mx-auto"></div>
-          </div>
-        )}
-      </div>
-
-      {/* 关注列表 */}
-      <div className="space-y-4">
-        {watchlist.map((item) => {
-          const marketBadge = getMarketBadge(item.symbol);
-          return (
-            <div
-              key={item.id}
-              className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all"
-            >
-              <div className="p-6">
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <div className="flex items-baseline gap-3 mb-2">
-                      <h2 className="text-xl font-bold text-gray-900">{item.name}</h2>
-                      <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium">
-                        {item.symbol}
-                      </span>
-                      <span className={`px-3 py-1 rounded-lg text-sm font-medium ${marketBadge.color}`}>
-                        {marketBadge.label}
-                      </span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => handleRemoveFromWatchlist(item.id)}
-                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                    title="删除"
-                  >
-                    <Trash2 className="w-5 h-5" />
-                  </button>
+        </div>
+      ) : (
+        <div className="flex gap-6">
+          {/* Left Sidebar - Stock List */}
+          <div className="w-80 flex-shrink-0">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden sticky top-6">
+              <div className="p-4 bg-gradient-to-r from-pink-50 to-rose-50 border-b border-gray-200">
+                <div className="flex items-center justify-between">
+                  <h2 className="font-semibold text-gray-900 flex items-center gap-2">
+                    <Heart className="w-5 h-5 text-pink-600" />
+                    我的关注 ({watchlist.length}/5)
+                  </h2>
+                  {watchlist.length < 5 && (
+                    <button
+                      onClick={() => setShowSearch(true)}
+                      className="p-1.5 text-pink-600 hover:bg-pink-100 rounded-lg transition-colors"
+                      title="添加股票"
+                    >
+                      <Search className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
+              </div>
+              <div className="divide-y divide-gray-100">
+                {watchlist.map((item) => {
+                  const marketBadge = getMarketBadge(item.symbol);
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setSelectedStock(item.symbol)}
+                      onMouseEnter={() => setHoveredStock(item.symbol)}
+                      onMouseLeave={() => setHoveredStock(null)}
+                      className={`w-full text-left p-4 transition-all duration-200 ${
+                        selectedStock === item.symbol
+                          ? 'bg-pink-50 border-l-4 border-pink-600'
+                          : hoveredStock === item.symbol
+                          ? 'bg-gray-50'
+                          : 'hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        {/* Market Badge */}
+                        <div className={`px-2 py-1 rounded text-xs font-bold flex-shrink-0 ${marketBadge.color}`}>
+                          {marketBadge.label}
+                        </div>
 
-                {/* 展开/收起按钮 */}
-                {analyses.has(item.symbol) && (
-                  <button
-                    onClick={() => toggleExpand(item.symbol)}
-                    className="mt-3 flex items-center gap-2 text-pink-600 hover:text-pink-700 font-medium transition-colors"
-                  >
-                    {expandedStock === item.symbol ? (
-                      <>
-                        <ChevronUp className="w-5 h-5" />
-                        收起AI分析
-                      </>
-                    ) : (
-                      <>
-                        <ChevronDown className="w-5 h-5" />
-                        查看AI分析
-                      </>
-                    )}
-                  </button>
-                )}
-
-                {/* AI分析显示 */}
-                {analyses.has(item.symbol) && expandedStock === item.symbol && (
-                  <div className="mt-6 pt-6 border-t border-gray-200">
-                    <AnalysisDisplay
-                      analysis={analyses.get(item.symbol)!.analysis}
-                      analyzedAt={analyses.get(item.symbol)!.analyzedAt}
-                    />
-                  </div>
-                )}
-
-                {/* 加载中 */}
-                {loadingAnalyses && !analyses.has(item.symbol) && (
-                  <div className="mt-6 pt-6 border-t border-gray-200">
-                    <div className="flex items-center gap-2 text-gray-500">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-pink-600"></div>
-                      <span className="text-sm">加载AI分析中...</span>
-                    </div>
-                  </div>
-                )}
+                        {/* Stock Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className={`font-semibold truncate transition-all ${
+                            selectedStock === item.symbol
+                              ? 'text-pink-900 text-base'
+                              : 'text-gray-900 text-sm'
+                          }`}>
+                            {item.name}
+                          </div>
+                          <div className={`text-xs font-medium mt-1 transition-all ${
+                            selectedStock === item.symbol
+                              ? 'text-pink-600'
+                              : 'text-gray-500'
+                          }`}>
+                            {item.symbol}
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
-          );
-        })}
-      </div>
+          </div>
+
+          {/* Right Content - Stock Details & Analysis */}
+          <div className="flex-1 min-w-0">
+            {selectedStock ? (
+              <div className="space-y-6">
+                {/* Stock Details Card */}
+                {(() => {
+                  const selectedItem = watchlist.find(item => item.symbol === selectedStock);
+                  if (!selectedItem) return null;
+                  const marketBadge = getMarketBadge(selectedItem.symbol);
+                  
+                  return (
+                    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-start gap-4">
+                          {/* Market Badge */}
+                          <div className={`px-4 py-2 rounded-xl text-sm font-bold ${marketBadge.color}`}>
+                            {marketBadge.label}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleRemoveFromWatchlist(selectedItem.id)}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="删除"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
+
+                      {/* Stock Info */}
+                      <div>
+                        <h2 className="text-3xl font-bold text-gray-900 mb-2">{selectedItem.name}</h2>
+                        <div className="flex items-center gap-3">
+                          <span className="px-4 py-1.5 bg-gray-100 text-gray-700 rounded-lg font-medium">
+                            {selectedItem.symbol}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* AI Analysis Card */}
+                {selectedStock && analyses.has(selectedStock) ? (
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                    <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                      <Heart className="w-6 h-6 text-pink-600" />
+                      AI 投资分析
+                    </h3>
+                    <AnalysisDisplay
+                      analysis={analyses.get(selectedStock)!.analysis}
+                      analyzedAt={analyses.get(selectedStock)!.analyzedAt}
+                    />
+                  </div>
+                ) : loadingAnalyses ? (
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12">
+                    <div className="flex flex-col items-center justify-center text-gray-500">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-600 mb-4"></div>
+                      <span>加载AI分析中...</span>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12">
+                <div className="text-center text-gray-500">
+                  <Heart className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                  <p>请从左侧选择一只股票查看详情</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* 搜索弹窗 */}
       {showSearch && (

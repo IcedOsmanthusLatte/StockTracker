@@ -24,7 +24,8 @@ export default function BerkshireTab() {
   const [error, setError] = useState<string | null>(null);
   const [analyses, setAnalyses] = useState<Map<string, StockAnalysis>>(new Map());
   const [loadingAnalyses, setLoadingAnalyses] = useState(false);
-  const [expandedStock, setExpandedStock] = useState<string | null>(null);
+  const [selectedStock, setSelectedStock] = useState<string | null>(null);
+  const [hoveredStock, setHoveredStock] = useState<string | null>(null);
 
   useEffect(() => {
     fetchBerkshireHoldings();
@@ -75,10 +76,14 @@ export default function BerkshireTab() {
 
     setAnalyses(analysisMap);
     setLoadingAnalyses(false);
-  };
-
-  const toggleExpand = (symbol: string) => {
-    setExpandedStock(prev => prev === symbol ? null : symbol);
+    
+    // 只有在用户还没有选择时，才默认选中第一只股票
+    setSelectedStock(prev => {
+      if (prev === null && stocksList.length > 0) {
+        return stocksList[0].symbol;
+      }
+      return prev;
+    });
   };
 
   if (loading) {
@@ -108,124 +113,170 @@ export default function BerkshireTab() {
     );
   }
 
+  const selectedStockData = stocks.find(s => s.symbol === selectedStock);
+  const selectedStockIndex = stocks.findIndex(s => s.symbol === selectedStock);
+
   return (
     <div>
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-4">
+      <div className="mb-6">
+        <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
             <TrendingUp className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">伯克希尔·哈撒韦前十大持仓</h1>
-            <p className="text-gray-600 mt-1">Berkshire Hathaway Top 10 Holdings (Q4 2025)</p>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-          <div className="flex items-start gap-4">
-            <BarChart3 className="w-6 h-6 text-blue-600 mt-1" />
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">关于持仓数据</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                以下数据基于伯克希尔·哈撒韦2025年第四季度13F报告（截至2025年12月31日）。
-                投资组合总价值约$274.16B，前十大持仓占比约88%。AI分析每日早上10点自动更新。
-              </p>
-            </div>
+            <h1 className="text-2xl font-bold text-gray-900">伯克希尔·哈撒韦前十大持仓</h1>
+            <p className="text-sm text-gray-600">Berkshire Hathaway Top 10 Holdings (Q4 2025)</p>
           </div>
         </div>
       </div>
 
-      {/* Holdings List */}
-      <div className="space-y-4">
-        {stocks.map((stock, index) => (
-          <div
-            key={stock.id}
-            className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all"
-          >
-            <div className="p-6">
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-start gap-4 flex-1">
+      {/* Main Layout: Sidebar + Content */}
+      <div className="flex gap-6">
+        {/* Left Sidebar - Stock List */}
+        <div className="w-80 flex-shrink-0">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden sticky top-6">
+            <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
+              <h2 className="font-semibold text-gray-900 flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-blue-600" />
+                持仓列表
+              </h2>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {stocks.map((stock, index) => (
+                <button
+                  key={stock.id}
+                  onClick={() => setSelectedStock(stock.symbol)}
+                  onMouseEnter={() => setHoveredStock(stock.symbol)}
+                  onMouseLeave={() => setHoveredStock(null)}
+                  className={`w-full text-left p-4 transition-all duration-200 ${
+                    selectedStock === stock.symbol
+                      ? 'bg-blue-50 border-l-4 border-blue-600'
+                      : hoveredStock === stock.symbol
+                      ? 'bg-gray-50'
+                      : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    {/* Rank Badge */}
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm flex-shrink-0 ${
+                      index === 0 ? 'bg-gradient-to-br from-yellow-400 to-orange-500 text-white' :
+                      index === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800' :
+                      index === 2 ? 'bg-gradient-to-br from-orange-400 to-orange-600 text-white' :
+                      'bg-blue-100 text-blue-700'
+                    }`}>
+                      {index + 1}
+                    </div>
+
+                    {/* Stock Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className={`font-semibold truncate transition-all ${
+                        selectedStock === stock.symbol
+                          ? 'text-blue-900 text-base'
+                          : 'text-gray-900 text-sm'
+                      }`}>
+                        {stock.name}
+                      </div>
+                      <div className="flex items-center justify-between gap-2 mt-1">
+                        <span className={`text-xs font-medium transition-all ${
+                          selectedStock === stock.symbol
+                            ? 'text-blue-600'
+                            : 'text-gray-500'
+                        }`}>
+                          {stock.symbol}
+                        </span>
+                        <span className={`text-xs font-bold transition-all ${
+                          selectedStock === stock.symbol
+                            ? 'text-blue-600'
+                            : 'text-gray-600'
+                        }`}>
+                          {stock.portfolio_weight?.toFixed(1)}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Content - Stock Details & Analysis */}
+        <div className="flex-1 min-w-0">
+          {selectedStockData ? (
+            <div className="space-y-6">
+              {/* Stock Details Card */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <div className="flex items-start gap-4 mb-6">
                   {/* Rank Badge */}
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg ${
-                    index === 0 ? 'bg-gradient-to-br from-yellow-400 to-orange-500 text-white shadow-lg' :
-                    index === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800' :
-                    index === 2 ? 'bg-gradient-to-br from-orange-400 to-orange-600 text-white' :
+                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center font-bold text-2xl shadow-lg ${
+                    selectedStockIndex === 0 ? 'bg-gradient-to-br from-yellow-400 to-orange-500 text-white' :
+                    selectedStockIndex === 1 ? 'bg-gradient-to-br from-gray-300 to-gray-400 text-gray-800' :
+                    selectedStockIndex === 2 ? 'bg-gradient-to-br from-orange-400 to-orange-600 text-white' :
                     'bg-gradient-to-br from-blue-100 to-indigo-100 text-blue-700'
                   }`}>
-                    #{index + 1}
+                    #{selectedStockIndex + 1}
                   </div>
 
                   {/* Stock Info */}
                   <div className="flex-1">
-                    <div className="flex items-baseline gap-3 mb-2">
-                      <h2 className="text-xl font-bold text-gray-900">{stock.name}</h2>
-                      <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium">
-                        {stock.symbol}
+                    <h2 className="text-3xl font-bold text-gray-900 mb-2">{selectedStockData.name}</h2>
+                    <div className="flex items-center gap-3">
+                      <span className="px-4 py-1.5 bg-blue-100 text-blue-700 rounded-lg font-medium">
+                        {selectedStockData.symbol}
                       </span>
+                      <span className="text-sm text-gray-500">美股</span>
                     </div>
+                  </div>
+                </div>
 
-                    {/* Portfolio Weight */}
-                    <div className="mb-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm text-gray-600">持仓占比</span>
-                        <span className="text-lg font-bold text-blue-600">
-                          {stock.portfolio_weight?.toFixed(2)}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                        <div
-                          className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full transition-all duration-500"
-                          style={{ width: `${Math.min(stock.portfolio_weight || 0, 100)}%` }}
-                        ></div>
-                      </div>
-                    </div>
-
-                    {/* Expand/Collapse Button */}
-                    {analyses.has(stock.symbol) && (
-                      <button
-                        onClick={() => toggleExpand(stock.symbol)}
-                        className="mt-3 flex items-center gap-2 text-blue-600 hover:text-blue-700 font-medium transition-colors"
-                      >
-                        {expandedStock === stock.symbol ? (
-                          <>
-                            <ChevronUp className="w-5 h-5" />
-                            收起AI分析
-                          </>
-                        ) : (
-                          <>
-                            <ChevronDown className="w-5 h-5" />
-                            查看AI分析
-                          </>
-                        )}
-                      </button>
-                    )}
+                {/* Portfolio Weight */}
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-gray-600 font-medium">持仓占比</span>
+                    <span className="text-2xl font-bold text-blue-600">
+                      {selectedStockData.portfolio_weight?.toFixed(2)}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-4 overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(selectedStockData.portfolio_weight || 0, 100)}%` }}
+                    ></div>
                   </div>
                 </div>
               </div>
 
-              {/* AI Analysis Display - Only show when expanded */}
-              {analyses.has(stock.symbol) && expandedStock === stock.symbol && (
-                <div className="mt-6 pt-6 border-t border-gray-200">
+              {/* AI Analysis Card */}
+              {selectedStock && analyses.has(selectedStock) ? (
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <BarChart3 className="w-6 h-6 text-blue-600" />
+                    AI 投资分析
+                  </h3>
                   <AnalysisDisplay
-                    analysis={analyses.get(stock.symbol)!.analysis}
-                    analyzedAt={analyses.get(stock.symbol)!.analyzedAt}
+                    analysis={analyses.get(selectedStock)!.analysis}
+                    analyzedAt={analyses.get(selectedStock)!.analyzedAt}
                   />
                 </div>
-              )}
-
-              {/* Loading Analysis Indicator */}
-              {loadingAnalyses && !analyses.has(stock.symbol) && (
-                <div className="mt-6 pt-6 border-t border-gray-200">
-                  <div className="flex items-center gap-2 text-gray-500">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                    <span className="text-sm">加载AI分析中...</span>
+              ) : loadingAnalyses ? (
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12">
+                  <div className="flex flex-col items-center justify-center text-gray-500">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+                    <span>加载AI分析中...</span>
                   </div>
                 </div>
-              )}
+              ) : null}
             </div>
-          </div>
-        ))}
+          ) : (
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12">
+              <div className="text-center text-gray-500">
+                <BarChart3 className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                <p>请从左侧选择一只股票查看详情</p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Footer Info */}

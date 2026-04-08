@@ -21,28 +21,30 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
-      {/* Header */}
-      <header className="border-b border-gray-200 bg-white/80 backdrop-blur-xl sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-violet-600 to-purple-600 rounded-lg flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-white" />
+      {/* Fixed Header Container */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+        {/* Header */}
+        <header className="border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-violet-600 to-purple-600 rounded-lg flex items-center justify-center">
+                  <TrendingUp className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xl font-bold text-gray-900">StockTracker</span>
+                  <span className="text-xs text-gray-500">stockr.site</span>
+                </div>
               </div>
-              <div className="flex flex-col">
-                <span className="text-xl font-bold text-gray-900">StockTracker</span>
-                <span className="text-xs text-gray-500">stockr.site</span>
+              <div className="hidden md:block text-base italic text-gray-600 font-serif">
+                芒格：&ldquo;我的剑只传给能挥舞它的人&rdquo;
               </div>
-            </div>
-            <div className="hidden md:block text-base italic text-gray-600 font-serif">
-              芒格：&ldquo;我的剑只传给能挥舞它的人&rdquo;
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      {/* Tab Navigation */}
-      <div className="border-b border-gray-200 bg-white">
+        {/* Tab Navigation */}
+        <div className="bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex gap-1">
             {tabs.map((tab) => {
@@ -71,10 +73,11 @@ export default function Home() {
             })}
           </div>
         </div>
+        </div>
       </div>
 
-      {/* Tab Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Tab Content - Add padding-top to account for fixed header */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" style={{ paddingTop: '140px' }}>
         {activeTab === 'berkshire' && <BerkshireTab />}
         {activeTab === 'featured' && <FeaturedTab />}
         {activeTab === 'watchlist' && <WatchlistTab />}

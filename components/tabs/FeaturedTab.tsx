@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Star, Globe, ChevronDown, ChevronUp } from 'lucide-react';
+import { Star, Globe } from 'lucide-react';
 import AnalysisDisplay from '@/components/AnalysisDisplay';
 
 interface Stock {
@@ -23,7 +23,8 @@ export default function FeaturedTab() {
   const [error, setError] = useState<string | null>(null);
   const [analyses, setAnalyses] = useState<Map<string, StockAnalysis>>(new Map());
   const [loadingAnalyses, setLoadingAnalyses] = useState(false);
-  const [expandedStock, setExpandedStock] = useState<string | null>(null);
+  const [selectedStock, setSelectedStock] = useState<string | null>(null);
+  const [hoveredStock, setHoveredStock] = useState<string | null>(null);
 
   useEffect(() => {
     fetchFeaturedStocks();
@@ -74,10 +75,14 @@ export default function FeaturedTab() {
 
     setAnalyses(analysisMap);
     setLoadingAnalyses(false);
-  };
-
-  const toggleExpand = (symbol: string) => {
-    setExpandedStock(prev => prev === symbol ? null : symbol);
+    
+    // 只有在用户还没有选择时，才默认选中第一只股票
+    setSelectedStock(prev => {
+      if (prev === null && stocksList.length > 0) {
+        return stocksList[0].symbol;
+      }
+      return prev;
+    });
   };
 
   const getMarketBadge = (symbol: string) => {
@@ -117,97 +122,137 @@ export default function FeaturedTab() {
     );
   }
 
+  const selectedStockData = stocks.find(s => s.symbol === selectedStock);
+  const selectedStockIndex = stocks.findIndex(s => s.symbol === selectedStock);
+
   return (
     <div>
       {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-4">
+      <div className="mb-6">
+        <div className="flex items-center gap-3">
           <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg">
             <Star className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">特别关注</h1>
-            <p className="text-gray-600 mt-1">精选A股、港股、美股优质标的</p>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-          <div className="flex items-start gap-4">
-            <Globe className="w-6 h-6 text-yellow-600 mt-1" />
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">关于特别关注</h3>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                精选14只优质股票，覆盖A股、港股、美股三大市场。包含价值投资标的、行业龙头、优质ETF等。
-                AI分析每日早上10点自动更新。
-              </p>
-            </div>
+            <h1 className="text-2xl font-bold text-gray-900">特别关注</h1>
+            <p className="text-sm text-gray-600">精选A股、港股、美股优质标的</p>
           </div>
         </div>
       </div>
 
-      {/* Stocks List */}
-      <div className="space-y-4">
-        {stocks.map((stock) => {
-          const marketBadge = getMarketBadge(stock.symbol);
-          return (
-            <div
-              key={stock.id}
-              className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-all"
-            >
-              <div className="p-6">
-                <div className="flex items-baseline gap-3 mb-4">
-                  <h2 className="text-xl font-bold text-gray-900">{stock.name}</h2>
-                  <span className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium">
-                    {stock.symbol}
-                  </span>
-                  <span className={`px-3 py-1 rounded-lg text-sm font-medium ${marketBadge.color}`}>
-                    {marketBadge.label}
-                  </span>
+      {/* Main Layout: Sidebar + Content */}
+      <div className="flex gap-6">
+        {/* Left Sidebar - Stock List */}
+        <div className="w-80 flex-shrink-0">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden sticky top-6">
+            <div className="p-4 bg-gradient-to-r from-yellow-50 to-orange-50 border-b border-gray-200">
+              <h2 className="font-semibold text-gray-900 flex items-center gap-2">
+                <Globe className="w-5 h-5 text-yellow-600" />
+                股票列表
+              </h2>
+            </div>
+            <div className="divide-y divide-gray-100">
+              {stocks.map((stock, index) => {
+                const marketBadge = getMarketBadge(stock.symbol);
+                return (
+                  <button
+                    key={stock.id}
+                    onClick={() => setSelectedStock(stock.symbol)}
+                    onMouseEnter={() => setHoveredStock(stock.symbol)}
+                    onMouseLeave={() => setHoveredStock(null)}
+                    className={`w-full text-left p-4 transition-all duration-200 ${
+                      selectedStock === stock.symbol
+                        ? 'bg-yellow-50 border-l-4 border-yellow-600'
+                        : hoveredStock === stock.symbol
+                        ? 'bg-gray-50'
+                        : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      {/* Market Badge */}
+                      <div className={`px-2 py-1 rounded text-xs font-bold flex-shrink-0 ${marketBadge.color}`}>
+                        {marketBadge.label}
+                      </div>
+
+                      {/* Stock Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className={`font-semibold truncate transition-all ${
+                          selectedStock === stock.symbol
+                            ? 'text-yellow-900 text-base'
+                            : 'text-gray-900 text-sm'
+                        }`}>
+                          {stock.name}
+                        </div>
+                        <div className={`text-xs font-medium mt-1 transition-all ${
+                          selectedStock === stock.symbol
+                            ? 'text-yellow-600'
+                            : 'text-gray-500'
+                        }`}>
+                          {stock.symbol}
+                        </div>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Content - Stock Details & Analysis */}
+        <div className="flex-1 min-w-0">
+          {selectedStockData ? (
+            <div className="space-y-6">
+              {/* Stock Details Card */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                <div className="flex items-start gap-4 mb-4">
+                  {/* Market Badge */}
+                  <div className={`px-4 py-2 rounded-xl text-sm font-bold ${getMarketBadge(selectedStockData.symbol).color}`}>
+                    {getMarketBadge(selectedStockData.symbol).label}
+                  </div>
                 </div>
 
-                {/* Expand/Collapse Button */}
-                {analyses.has(stock.symbol) && (
-                  <button
-                    onClick={() => toggleExpand(stock.symbol)}
-                    className="mt-3 flex items-center gap-2 text-yellow-600 hover:text-yellow-700 font-medium transition-colors"
-                  >
-                    {expandedStock === stock.symbol ? (
-                      <>
-                        <ChevronUp className="w-5 h-5" />
-                        收起AI分析
-                      </>
-                    ) : (
-                      <>
-                        <ChevronDown className="w-5 h-5" />
-                        查看AI分析
-                      </>
-                    )}
-                  </button>
-                )}
-
-                {/* AI Analysis Display - Only show when expanded */}
-                {analyses.has(stock.symbol) && expandedStock === stock.symbol && (
-                  <div className="mt-6 pt-6 border-t border-gray-200">
-                    <AnalysisDisplay
-                      analysis={analyses.get(stock.symbol)!.analysis}
-                      analyzedAt={analyses.get(stock.symbol)!.analyzedAt}
-                    />
+                {/* Stock Info */}
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-900 mb-2">{selectedStockData.name}</h2>
+                  <div className="flex items-center gap-3">
+                    <span className="px-4 py-1.5 bg-gray-100 text-gray-700 rounded-lg font-medium">
+                      {selectedStockData.symbol}
+                    </span>
                   </div>
-                )}
+                </div>
+              </div>
 
-                {/* Loading Analysis Indicator */}
-                {loadingAnalyses && !analyses.has(stock.symbol) && (
-                  <div className="mt-6 pt-6 border-t border-gray-200">
-                    <div className="flex items-center gap-2 text-gray-500">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-600"></div>
-                      <span className="text-sm">加载AI分析中...</span>
-                    </div>
+              {/* AI Analysis Card */}
+              {selectedStock && analyses.has(selectedStock) ? (
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                    <Star className="w-6 h-6 text-yellow-600" />
+                    AI 投资分析
+                  </h3>
+                  <AnalysisDisplay
+                    analysis={analyses.get(selectedStock)!.analysis}
+                    analyzedAt={analyses.get(selectedStock)!.analyzedAt}
+                  />
+                </div>
+              ) : loadingAnalyses ? (
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12">
+                  <div className="flex flex-col items-center justify-center text-gray-500">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-600 mb-4"></div>
+                    <span>加载AI分析中...</span>
                   </div>
-                )}
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-12">
+              <div className="text-center text-gray-500">
+                <Star className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                <p>请从左侧选择一只股票查看详情</p>
               </div>
             </div>
-          );
-        })}
+          )}
+        </div>
       </div>
 
       {/* Footer Info */}
