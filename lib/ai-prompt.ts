@@ -1,5 +1,8 @@
 export const STOCK_ANALYSIS_PROMPT = `你是一位专业的股票分析师，请对以下股票进行分析。
 
+【当前时间】
+今天是：{currentDate}（请在分析中使用这个日期作为参考，确保数据是最新的）
+
 【分析目标】
 股票代码：{symbol}
 股票名称：{name}
@@ -18,8 +21,9 @@ export const STOCK_ANALYSIS_PROMPT = `你是一位专业的股票分析师，请
    - 如果搜索不到某项数据，明确说明"暂无该数据"，不要猜测
 
 3. **信息时效性**：
-   - 优先使用最新的实时行情数据
-   - 注明数据的时间（如"截至2026年4月2日收盘"）
+   - **必须使用web_search获取今天的最新实时行情数据**
+   - 注明数据的实际时间（例如"截至2026年4月X日收盘"，X必须是搜索到的真实日期）
+   - **严格禁止使用过时数据**：如果今天是4月8日，数据日期不能早于4月7日（除非市场休市）
    - 新闻和研报应该是最近一周内的
 
 请严格按照以下结构输出分析（不要添加额外的标题或说明）：
@@ -94,7 +98,16 @@ export function formatPrompt(stockData: {
   symbol: string;
   name: string;
 }): string {
+  // 获取中国时区的当前日期
+  const now = new Date();
+  const chinaTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+  const year = chinaTime.getUTCFullYear();
+  const month = chinaTime.getUTCMonth() + 1;
+  const day = chinaTime.getUTCDate();
+  const currentDate = `${year}年${month}月${day}日`;
+  
   return STOCK_ANALYSIS_PROMPT
+    .replace(/{currentDate}/g, currentDate)
     .replace(/{symbol}/g, stockData.symbol)
     .replace(/{name}/g, stockData.name);
 }
