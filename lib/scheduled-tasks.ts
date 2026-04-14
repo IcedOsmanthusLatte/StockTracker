@@ -4,6 +4,25 @@ import { analyzeStock } from './openai';
 import { formatPrompt } from './ai-prompt';
 
 /**
+ * 检查今天是否为交易日（中国时区）
+ * 规则：周一到周五为交易日，周六周日为休市日
+ * 注意：此函数不考虑节假日，仅判断周末
+ */
+function isTradingDay(): boolean {
+  const now = new Date();
+  const chinaTime = new Date(now.getTime() + (8 * 60 * 60 * 1000));
+  const dayOfWeek = chinaTime.getUTCDay(); // 0=周日, 1=周一, ..., 6=周六
+  
+  // 周一(1)到周五(5)为交易日
+  const isTrading = dayOfWeek >= 1 && dayOfWeek <= 5;
+  
+  const days = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+  console.log(`[Trading Day Check] 今天是${days[dayOfWeek]}，${isTrading ? '交易日' : '休市日'}`);
+  
+  return isTrading;
+}
+
+/**
  * 更新指定列表类型的所有股票缓存
  * @param listType - 列表类型 ('berkshire' 或 'featured')
  */
@@ -83,6 +102,12 @@ export async function updateListCache(listType: 'berkshire' | 'featured'): Promi
 export async function dailyScheduledUpdate(): Promise<void> {
   console.log('[Scheduled Task] 开始每日定时更新...');
   
+  // 检查是否为交易日
+  if (!isTradingDay()) {
+    console.log('[Scheduled Task] 今天是休市日（周末），跳过自动更新，节省Token费用');
+    return;
+  }
+  
   try {
     // 更新伯克希尔列表
     await updateListCache('berkshire');
@@ -101,6 +126,13 @@ export async function dailyScheduledUpdate(): Promise<void> {
  */
 export async function startupCacheUpdate(): Promise<void> {
   console.log('[Startup] 开始启动时缓存更新...');
+  
+  // 检查是否为交易日
+  if (!isTradingDay()) {
+    console.log('[Startup] 今天是休市日（周末），跳过启动时更新，节省Token费用');
+    console.log('[Startup] 用户访问时将使用上一个交易日的缓存数据');
+    return;
+  }
   
   try {
     // 更新伯克希尔列表
